@@ -1,89 +1,52 @@
-import tailwindcss from '@tailwindcss/vite';
-import react from '@vitejs/plugin-react';
-import path from 'path';
-import { defineConfig } from 'vite';
-import { VitePWA } from 'vite-plugin-pwa';
+name: Deploy Vite to GitHub Pages
 
-const base = '/-/';
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
-export default defineConfig(() => {
-  return {
-    base,
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
-    plugins: [
-      react(),
-      tailwindcss(),
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-      VitePWA({
-        registerType: 'autoUpdate',
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-        includeAssets: [
-          'favicon.ico',
-          'apple-touch-icon.png',
-          'icon.svg',
-          'images/*.jpg',
-        ],
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-        manifest: {
-          id: base,
-          name: 'الصلاة على النبي ﷺ',
-          short_name: 'صلِّ على النبي',
-          description:
-            'تطبيق للتذكير بالصلاة والسلام على رسول الله محمد ﷺ كل 5 دقائق بصور منبثقة وعداد تسبيح.',
+      - name: Install dependencies
+        run: npm install
 
-          theme_color: '#064e3b',
-          background_color: '#064e3b',
+      - name: Build
+        run: npm run build
 
-          display: 'standalone',
-          orientation: 'portrait',
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
 
-          start_url: base,
-          scope: base,
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
 
-          icons: [
-            {
-              src: `${base}pwa-192x192.png`,
-              sizes: '192x192',
-              type: 'image/png',
-              purpose: 'any',
-            },
-            {
-              src: `${base}pwa-512x512.png`,
-              sizes: '512x512',
-              type: 'image/png',
-              purpose: 'any',
-            },
-            {
-              src: `${base}pwa-maskable-512x512.png`,
-              sizes: '512x512',
-              type: 'image/png',
-              purpose: 'maskable',
-            },
-          ],
-        },
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
 
-        workbox: {
-          globPatterns: [
-            '**/*.{js,css,html,ico,png,svg,jpg,jpeg,woff,woff2}',
-          ],
-        },
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
-        devOptions: {
-          enabled: true,
-          type: 'module',
-        },
-      }),
-    ],
-
-    resolve: {
-      alias: {
-        '@': path.resolve(__dirname, '.'),
-      },
-    },
-
-    server: {
-      hmr: process.env.DISABLE_HMR !== 'true',
-      watch: process.env.DISABLE_HMR === 'true' ? null : {},
-    },
-  };
-});
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
