@@ -1,0 +1,6 @@
+{
+  "name": "الصلاة على النبي ﷺ",
+  "description": "تطبيق للتثبيت على الهاتف يذكّرك بالصلاة والسلام على النبي محمد ﷺ كل خمس دقائق بصور منبثقة وعداد تسبيح وتنبيهات.",
+  "requestFramePermissions": ["notifications"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
