@@ -1,40 +1,92 @@
-name: Deploy Vite to GitHub Pages
+import tailwindcss from '@tailwindcss/vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
+import { defineConfig } from 'vite';
+import { VitePWA } from 'vite-plugin-pwa';
 
-on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+const base = '/-/';
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+export default defineConfig(() => {
+  return {
+    base,
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+    plugins: [
+      react(),
+      tailwindcss(),
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      VitePWA({
+        registerType: 'autoUpdate',
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+        includeAssets: [
+          'favicon.ico',
+          'apple-touch-icon.png',
+          'icon.svg',
+          'images/*.jpg',
+        ],
 
-      - name: Install dependencies
-        run: npm install
+        manifest: {
+          id: base,
+          name: 'الصلاة على النبي ﷺ',
+          short_name: 'صلِّ على النبي',
+          description:
+            'تطبيق للتذكير بالصلاة والسلام على رسول الله محمد ﷺ كل 5 دقائق بصور منبثقة وعداد تسبيح.',
 
-      - name: Build
-        run: npm run build
+          theme_color: '#064e3b',
+          background_color: '#064e3b',
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
+          display: 'standalone',
+          orientation: 'portrait',
 
-      - name: Upload site
-        uses: actions/upload-pages-artifact@v3
+          start_url: base,
+          scope: base,
+
+          icons: [
+            {
+              src: `${base}pwa-192x192.png`,
+              sizes: '192x192',
+              type: 'image/png',
+              purpose: 'any',
+            },
+            {
+              src: `${base}pwa-512x512.png`,
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'any',
+            },
+            {
+              src: `${base}pwa-maskable-512x512.png`,
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'maskable',
+            },
+          ],
+        },
+
+        workbox: {
+          globPatterns: [
+            '**/*.{js,css,html,ico,png,svg,jpg,jpeg,woff,woff2}',
+          ],
+        },
+
+        devOptions: {
+          enabled: true,
+          type: 'module',
+        },
+      }),
+    ],
+
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, '.'),
+      },
+    },
+
+    server: {
+      hmr: process.env.DISABLE_HMR !== 'true',
+      watch: process.env.DISABLE_HMR === 'true' ? null : {},
+    },
+  };
+});        uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
